@@ -3,14 +3,14 @@
 
 
 tls                                                          E. Rescorla
-Internet-Draft                                                RTFM, Inc.
+Internet-Draft                                   Windy Hill Systems, LLC
 Intended status: Standards Track                                  K. Oku
-Expires: 20 August 2024                                           Fastly
+Expires: 4 October 2024                                           Fastly
                                                              N. Sullivan
                                              Cryptography Consulting LLC
                                                               C. A. Wood
                                                               Cloudflare
-                                                        17 February 2024
+                                                            2 April 2024
 
 
                        TLS Encrypted Client Hello
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 August 2024.
+   This Internet-Draft will expire on 4 October 2024.
 
 Copyright Notice
 
@@ -64,7 +64,7 @@ Table of Contents
 
    1.  Introduction
    2.  Conventions and Definitions
-   3.  Deployment Overview
+   3.  Overview
      3.1.  Topologies
      3.2.  Encrypted ClientHello (ECH)
    4.  Encrypted ClientHello Configuration
@@ -154,16 +154,6 @@ Table of Contents
    messages, which leaks the target domain for a given connection, is
    perhaps the most sensitive, unencrypted information in TLS 1.3.
 
-   The target domain may also be visible through other channels, such as
-   plaintext client DNS queries or visible server IP addresses.
-   However, DoH [RFC8484] and DPRIVE [RFC7858] [RFC8094] provide
-   mechanisms for clients to conceal DNS lookups from network
-   inspection, and many TLS servers host multiple domains on the same IP
-   address.  Private origins may also be deployed behind a common
-   service provider, such as a reverse proxy.  In such environments, the
-   SNI remains the primary explicit signal used to determine the
-   server's identity.
-
    This document specifies a new TLS extension, called Encrypted Client
    Hello (ECH), that allows clients to encrypt their ClientHello to such
    a deployment.  This protects the SNI and other potentially sensitive
@@ -180,6 +170,17 @@ Table of Contents
    connection.  Deployment implications of this feature are discussed in
    Section 8.
 
+   ECH is not in itself sufficient to protect the identity of the
+   server.  The target domain may also be visible through other
+   channels, such as plaintext client DNS queries or visible server IP
+   addresses.  However, DoH [RFC8484] and DPRIVE [RFC7858] [RFC8094]
+   provide mechanisms for clients to conceal DNS lookups from network
+   inspection, and many TLS servers host multiple domains on the same IP
+   address.  Private origins may also be deployed behind a common
+   provider, such as a reverse proxy.  In such environments, the SNI
+   remains the primary explicit signal used to determine the server's
+   identity.
+
    ECH is supported in TLS 1.3 [RFC8446], DTLS 1.3 [RFC9147], and newer
    versions of the TLS and DTLS protocols.
 
@@ -192,31 +193,13 @@ Table of Contents
    capitals, as shown here.  All TLS notation comes from [RFC8446],
    Section 3.
 
-3.  Deployment Overview
+3.  Overview
 
    This protocol is designed to operate in one of two topologies
    illustrated below, which we call "Shared Mode" and "Split Mode".
    These modes are described in the following section.
 
 3.1.  Topologies
-
-   The simplest topology is "Shared Mode", in which a service provider
-   is the origin server for multiple domains ("private.example.org" and
-   "public.example.com" in Figure 1).  The DNS records for both domains
-   point to the service provider's server and so when the client wished
-   to connect to one of those domains it forms a transport-level
-   connection to that server which then terminates the TLS connection,
-   with the SNI used to distinguish which domain the client is trying to
-   reach.  This corresponds to how TLS servers are deployed today, and
-   in Shared Mode ECH differs only in that the ClientHello (and hence
-   the SNI) is encrypted for the server, thus preventing on-path
-   attackers from determining which domains the client is connecting to.
-
-   Note that even in Shared mode, it is possible that the service
-   provider's server actually is contacting some other server at the
-   application layer (as in a reverse proxy) but this is invisible at
-   the TLS layer; from the perspective of the client, the servicer
-   provider's server is the server.
 
                    +---------------------+
                    |                     |
@@ -232,9 +215,9 @@ Table of Contents
 
                        Figure 1: Shared Mode Topology
 
-   ECH can also be operated in "Split Mode", in which the transport-
-   level connection is terminated by one server but the TLS-level
-   connection is terminated by a server behind it, as shown in Figure 2.
+   In Shared Mode, the provider is the origin server for all the domains
+   whose DNS records point to it.  In this mode, the TLS connection is
+   terminated by the provider.
 
               +--------------------+     +---------------------+
               |                    |     |                     |
@@ -247,42 +230,19 @@ Table of Contents
 
                        Figure 2: Split Mode Topology
 
-   As before, the DNS records for "public.example.com" and
-   "private.example.org" point to the same server, which is typically
-   still operated by some large provider (thus retaining a large
-   anonymity set), but that server is not the TLS origin for the private
-   domains.  For concreteness, we call this the server the "Client-
-   facing server".  When the client wants to connect to either site, it
-   makes a transport-level connection to the client-facing server and
-   provides the encrypted ClientHello.  The client-facing server
-   decrypts that ClientHello value and recovers the SNI (see the next
-   section for the case where the server is unable to decrypt the
-   ClientHello).  Depending on the contents of the SNI, the server will
-   either.
+   In Split Mode, the provider is not the origin server for private
+   domains.  Rather, the DNS records for private domains point to the
+   provider, and the provider's server relays the connection back to the
+   origin server, who terminates the TLS connection with the client.
+   Importantly, the service provider does not have access to the
+   plaintext of the connection beyond the unencrypted portions of the
+   handshake.
 
-   *  If the SNI corresponds to a domain served by the client-facing
-      server, it will terminate the TLS connection itself.
-
-   *  If the SNI corresponds to a private domain served by another
-      server (the "backend server") it will forward the TLS connection
-      to that server, which will terminate it at the TLS layer.  The
-      client-facing server relays the TLS-encrypted traffic to between
-      the client and the backend server but does not have access to the
-      plaintext of the connection beyond the unencrypted portions of the
-      handshake.
-
-   A given client-facing server may serve multiple private domains which
-   are served by distinct backend servers, using the SNI value to
-   multiplex between them.  However, it is necessary for a client-facing
-   server to itself be the origin server for at least one domain,
-   corresponding to the "public name".  This enables the client-facing
-   server to quickly update its ECH keys or disable ECH entirely without
-   waiting for DNS changes to propagate, as described in the next
-   section Section 6.1.6.
-
-   Note that the client does not need to know whether a given domain is
-   operating in Shared Mode or Split Mode; its behavior is the same in
-   either case.
+   In the remainder of this document, we will refer to the ECH-service
+   provider as the "client-facing server" and to the TLS terminator as
+   the "backend server".  These are the same entity in Shared Mode, but
+   in Split Mode, the client-facing and backend servers are physically
+   separated.
 
    See Section 10 for more discussion about the ECH threat model and how
    it relates to the client, client-facing server, and backend server.
@@ -294,7 +254,7 @@ Table of Contents
    metadata.  The server must publish this for all the domains it serves
    via Shared or Split Mode.  This document defines the ECH
    configuration's format, but delegates DNS publication details to
-   [HTTPS-RR].  See [ECH-IN-DNS] for specifics about how ECH
+   [RFC9460].  See [ECH-IN-DNS] for specifics about how ECH
    configurations are advertised in HTTPS records.  Other delivery
    mechanisms are also possible.  For example, the client may have the
    ECH configuration preconfigured.
@@ -524,7 +484,9 @@ Table of Contents
        } ECHClientHello;
 
    The outer extension uses the outer variant and the inner extension
-   uses the inner variant.  The inner extension has an empty payload.
+   uses the inner variant.  The inner extension has an empty payload,
+   which is included because TLS servers are not allowed to provide
+   extensions in ServerHello which were not included in ClientHello.
    The outer extension has the following fields:
 
    config_id  The ECHConfigContents.key_config.config_id for the chosen
@@ -538,8 +500,8 @@ Table of Contents
       corresponding payload field.  This field is empty in a
       ClientHelloOuter sent in response to HelloRetryRequest.
 
-   payload  The serialized and encrypted ClientHelloInner structure,
-      encrypted using HPKE as described in Section 6.1.
+   payload  The serialized and encrypted EncodedClientHelloInner
+      structure, encrypted using HPKE as described in Section 6.1.
 
    When a client offers the outer version of an "encrypted_client_hello"
    extension, the server MAY include an "encrypted_client_hello"
@@ -652,41 +614,23 @@ Table of Contents
    decompresses to a much larger ClientHelloInner.  This is discussed
    further in Section 10.12.4.
 
-   Implementations SHOULD bound the time to compute a ClientHelloInner
-   proportionally to the ClientHelloOuter size.  If the cost is
-   disproportionately large, a malicious client could exploit this in a
-   denial of service attack.  Appendix B describes a linear-time
+   Implementations SHOULD construct the ClientHelloInner in linear time.
+   Quadratic time implementations (such as may happen via naive copying)
+   create a denial of service risk.  Appendix B describes a linear-time
    procedure that may be used for this purpose.
 
 5.2.  Authenticating the ClientHelloOuter
 
-   To prevent a network attacker from modifying the reconstructed
-   ClientHelloInner (see Section 10.12.3), ECH authenticates
-   ClientHelloOuter by passing ClientHelloOuterAAD as the associated
-   data for HPKE sealing and opening operations.  The
-   ClientHelloOuterAAD is a serialized ClientHello structure, defined in
-   Section 4.1.2 of [RFC8446], which matches the ClientHelloOuter except
-   the payload field of the "encrypted_client_hello" is replaced with a
-   byte string of the same length but whose contents are zeros.  This
-   value does not include the four-byte header from the Handshake
-   structure.
-
-   The client follows the procedure in Section 6.1.1 to first construct
-   ClientHelloOuterAAD with a placeholder payload field, then replace
-   the field with the encrypted value to compute ClientHelloOuter.
-
-   The server then receives ClientHelloOuter and computes
-   ClientHelloOuterAAD by making a copy and replacing the portion
-   corresponding to the payload field with zeros.
-
-   The payload and the placeholder strings have the same length, so it
-   is not necessary for either side to recompute length prefixes when
-   applying the above transformations.
-
-   The decompression process in Section 5.1 forbids
-   "encrypted_client_hello" in OuterExtensions.  This ensures the
-   unauthenticated portion of ClientHelloOuter is not incorporated into
-   ClientHelloInner.
+   To prevent a network attacker from modifying the ClientHelloOuter
+   while keeping the same encrypted ClientHelloInner (see
+   Section 10.12.3), ECH authenticates ClientHelloOuter by passing
+   ClientHelloOuterAAD as the associated data for HPKE sealing and
+   opening operations.  The ClientHelloOuterAAD is a serialized
+   ClientHello structure, defined in Section 4.1.2 of [RFC8446], which
+   matches the ClientHelloOuter except that the payload field of the
+   "encrypted_client_hello" is replaced with a byte string of the same
+   length but whose contents are zeros.  This value does not include the
+   four-byte header from the Handshake structure.
 
 6.  Client Behavior
 
@@ -827,6 +771,11 @@ Table of Contents
        final_payload = context.Seal(ClientHelloOuterAAD,
                                     EncodedClientHelloInner)
 
+   Including ClientHelloOuterAAD as the HPKE AAD binds the
+   ClientHelloOuter to the ClientHelloInner, this preventing attackers
+   from modifying ClientHelloOuter while keeping the same
+   ClientHelloInner, as described in {#flow-clienthello-malleability}.
+
    Finally, the client replaces payload with final_payload to obtain
    ClientHelloOuter.  The two values have the same length, so it is not
    necessary to recompute length prefixes in the serialized structure.
@@ -845,9 +794,10 @@ Table of Contents
    "pre_shared_key" extension in its ServerHello.  This would appear to
    a network observer as if the server were sending this extension
    without solicitation, which would violate the extension rules
-   described in [RFC8446].  Sending a GREASE "pre_shared_key" extension
-   in the ClientHelloOuter makes it appear to the network as if the
-   extension were negotiated properly.
+   described in [RFC8446].  When offering a PSK in ClientHelloInner,
+   Clients SHOULD sending a GREASE "pre_shared_key" extension in the
+   ClientHelloOuter to make it appear to the network as if the extension
+   were negotiated properly.
 
    The client generates the extension payload by constructing an
    OfferedPsks structure (see [RFC8446], Section 4.2.11) as follows.
@@ -865,12 +815,16 @@ Table of Contents
 
 6.1.3.  Recommended Padding Scheme
 
-   This section describes a deterministic padding mechanism based on the
-   following observation: individual extensions can reveal sensitive
-   information through their length.  Thus, each extension in the inner
-   ClientHello may require different amounts of padding.  This padding
-   may be fully determined by the client's configuration or may require
-   server input.
+   If the ClientHelloInner is encrypted without padding, then the length
+   of the ClientHelloOuter.payload can leak information about
+   ClientHelloInner.  In order to prevent this the
+   EncodedClientHelloInner structure has a padding field.  This section
+   describes a deterministic mechanism for computing the required amount
+   of padding based on the following observation: individual extensions
+   can reveal sensitive information through -their length.  Thus, each
+   extension in the inner ClientHello may require different amounts of
+   padding.  This padding may be fully determined by the client's
+   configuration or may require server input.
 
    By way of example, clients typically support a small number of
    application profiles.  For instance, a browser might support HTTP
@@ -1030,10 +984,11 @@ Table of Contents
    new tracking vector.
 
    If none of the values provided in "retry_configs" contains a
-   supported version, or an earlier TLS version was negotiated, the
-   client can regard ECH as securely disabled by the server, and it
-   SHOULD retry the handshake with a new transport connection and ECH
-   disabled.
+   supported version, the server did not supply an
+   "encrypted_client_hello" extension in its EncryptedExtensions
+   message, or an earlier TLS version was negotiated, the client can
+   regard ECH as securely disabled by the server, and it SHOULD retry
+   the handshake with a new transport connection and ECH disabled.
 
    Clients SHOULD implement a limit on retries caused by receipt of
    "retry_configs" or servers which do not acknowledge the
@@ -1114,20 +1069,32 @@ Table of Contents
 
 7.  Server Behavior
 
-   Servers that support ECH play one of two roles, depending on the
-   payload of the "encrypted_client_hello" extension in the initial
-   ClientHello:
+   As described in {#topologies}, servers can play two roles, either as
+   the client-facing server or as the back-end server.  Depending on the
+   server role, the ECHClientHello will be different:
 
-   *  If ECHClientHello.type is outer, then the server acts as a client-
-      facing server and proceeds as described in Section 7.1 to extract
-      a ClientHelloInner, if available.
+   *  A client-facing server expects a ECHClientHello.type of outer, and
+      proceeds as described in Section 7.1 to extract a
+      ClientHelloInner, if available.
 
-   *  If ECHClientHello.type is inner, then the server acts as a backend
-      server and proceeds as described in Section 7.2.
+   *  A backend server expects a ECHClientHello.type of inner, and
+      proceeds as described in Section 7.2.
 
-   *  Otherwise, if ECHClientHello.type is not a valid
-      ECHClientHelloType, then the server MUST abort with an
-      "illegal_parameter" alert.
+   In split mode, a client-facing server which receives a ClientHello
+   with ECHClientHello.type of inner MUST abort with an
+   "illegal_parameter" alert.  Similarly, in split mode, a backend
+   server which receives a ClientHello with ECHClientHello.type of outer
+   MUST abort with an "illegal_parameter" alert.
+
+   In shared mode, a server plays both roles, first decrypting the
+   ClientHelloOuter and then using the contents of the ClientHelloInner.
+   A shared mode server which receives a ClientHello with
+   ECHClientHello.type of outer MUST abort with an "illegal_parameter"
+   alert, because such a ClientHello should never be received directly
+   from the network.
+
+   If ECHClientHello.type is not a valid ECHClientHelloType, then the
+   server MUST abort with an "illegal_parameter" alert.
 
    If the "encrypted_client_hello" is not present, then the server
    completes the handshake normally, as described in [RFC8446].
@@ -1153,7 +1120,7 @@ Table of Contents
 
    Some uses of ECH, such as local discovery mode, may randomize the
    ECHClientHello.config_id since it can be used as a tracking vector.
-   In such cases, the second method should be used for matching the
+   In such cases, the second method SHOULD be used for matching the
    ECHClientHello to a known ECHConfig.  See Section 10.4.  Unless
    specified by the application profile or otherwise externally
    configured, implementations MUST use the first method.
@@ -1188,7 +1155,7 @@ Table of Contents
    value of ECHConfig.contents.public_name, and abort with an
    "illegal_parameter" alert if these do not match.  This optional check
    allows the server to limit ECH connections to only use the public SNI
-   values advertised in its ECHConfigs.  The server must be careful not
+   values advertised in its ECHConfigs.  The server MUST be careful not
    to unnecessarily reject connections if the same ECHConfig id or
    keypair is used in multiple ECHConfigs with distinct public names.
 
@@ -1391,17 +1358,26 @@ Table of Contents
    attempt to use another server from the DNS results, if one is
    provided.
 
+   In order to ensure that the retry mechanism works successfully
+   servers SHOULD ensure that every endpoint which might receive a TLS
+   connection is provisioned with an appropriate certificate for the
+   public name.  This is especially important during periods of server
+   reconfiguration when different endpoints might have different
+   configurations.
+
 8.1.2.  Middleboxes
 
-   When connecting through a TLS-terminating proxy that does not support
-   this extension, [RFC8446], Section 9.3 requires the proxy still act
-   as a conforming TLS client and server.  The proxy must ignore unknown
-   parameters, and generate its own ClientHello containing only
-   parameters it understands.  Thus, when presenting a certificate to
-   the client or sending a ClientHello to the server, the proxy will act
-   as if connecting to the ClientHelloOuter server_name, which SHOULD
-   match the public name (see Section 6.1), without echoing the
-   "encrypted_client_hello" extension.
+   The requirements in [RFC8446], Section 9.3 which require proxies to
+   act as conforming TLS client and server provide interoperability with
+   TLS-terminating proxies even in cases where the server supports ECH
+   but the proxy does not, as detailed below.
+
+   The proxy must ignore unknown parameters, and generate its own
+   ClientHello containing only parameters it understands.  Thus, when
+   presenting a certificate to the client or sending a ClientHello to
+   the server, the proxy will act as if connecting to the
+   ClientHelloOuter server_name, which SHOULD match the public name (see
+   Section 6.1), without echoing the "encrypted_client_hello" extension.
 
    Depending on whether the client is configured to accept the proxy's
    certificate as authoritative for the public name, this may trigger
@@ -1423,19 +1399,11 @@ Table of Contents
    fundamentally different approaches to continue working.  For example,
    in managed enterprise settings, one approach may be to disable ECH
    entirely via group policy and for client implementations to honor
-   this action.  Another approach may be to intercept and decrypt client
-   TLS connections.  The feasibility of alternative solutions is
-   specific to individual deployments.
+   this action.
 
-   In environments where the network operator does not control the
-   endpoint devices, or does controls the endpoint devices but is
-   concerned about the security consequences of compromised devices,
-   e.g., data exfiltration, the SNI field is unsuitable for use as a
-   control even in the absence of ECH.  This is because devices without
-   controls, or which have been compromised, can alter or spoof the
-   value in an SNI field already, and can even bypass security
-   appliances which try to 'double-check' websites hosted by the target
-   server.  ECH does not materially change this situation.
+   In the context of Section 6.1.6, another approach may be to intercept
+   and decrypt client TLS connections.  The feasibility of alternative
+   solutions is specific to individual deployments.
 
 9.  Compliance Requirements
 
@@ -2001,7 +1969,10 @@ Table of Contents
    ECH mitigates this attack by only negotiating TLS parameters from
    ClientHelloInner and authenticating all inputs to the
    ClientHelloInner (EncodedClientHelloInner and ClientHelloOuter) with
-   the HPKE AEAD.  See Section 5.2.  An earlier iteration of this
+   the HPKE AEAD.  See Section 5.2.  The decompression process in
+   Section 5.1 forbids "encrypted_client_hello" in OuterExtensions.
+   This ensures the unauthenticated portion of ClientHelloOuter is not
+   incorporated into ClientHelloInner.  An earlier iteration of this
    specification only encrypted and authenticated the "server_name"
    extension, which left the overall ClientHello vulnerable to an
    analogue of this attack.
@@ -2109,20 +2080,13 @@ Table of Contents
    [ECH-IN-DNS]
               Schwartz, B. M., Bishop, M., and E. Nygren, "Bootstrapping
               TLS Encrypted ClientHello with DNS Service Bindings", Work
-              in Progress, Internet-Draft, draft-ietf-tls-svcb-ech-00,
-              26 September 2023, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-tls-svcb-ech-00>.
+              in Progress, Internet-Draft, draft-ietf-tls-svcb-ech-01,
+              27 March 2024, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-tls-svcb-ech-01>.
 
    [HPKE]     Barnes, R., Bhargavan, K., Lipp, B., and C. Wood, "Hybrid
               Public Key Encryption", RFC 9180, DOI 10.17487/RFC9180,
               February 2022, <https://www.rfc-editor.org/rfc/rfc9180>.
-
-   [HTTPS-RR] Schwartz, B. M., Bishop, M., and E. Nygren, "Service
-              Binding and Parameter Specification via the DNS (SVCB and
-              HTTPS Resource Records)", Work in Progress, Internet-
-              Draft, draft-ietf-dnsop-svcb-https-12, 11 March 2023,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-
-              svcb-https-12>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -2157,11 +2121,18 @@ Table of Contents
               1.3", RFC 9147, DOI 10.17487/RFC9147, April 2022,
               <https://www.rfc-editor.org/rfc/rfc9147>.
 
+   [RFC9460]  Schwartz, B., Bishop, M., and E. Nygren, "Service Binding
+              and Parameter Specification via the DNS (SVCB and HTTPS
+              Resource Records)", RFC 9460, DOI 10.17487/RFC9460,
+              November 2023, <https://www.rfc-editor.org/rfc/rfc9460>.
+
 12.2.  Informative References
 
    [ECH-Analysis]
               "A Symbolic Analysis of Privacy for TLS 1.3 with Encrypted
-              Client Hello", November 2022.
+              Client Hello", November 2022,
+              <https://www.cs.ox.ac.uk/people/vincent.cheval/publis/BCW-
+              ccs22.pdf>.
 
    [I-D.kazuho-protected-sni]
               Oku, K., "TLS Extensions for Protecting SNI", Work in
@@ -2353,7 +2324,7 @@ D.8.  Since draft-ietf-tls-esni-09
 Authors' Addresses
 
    Eric Rescorla
-   RTFM, Inc.
+   Windy Hill Systems, LLC
    Email: ekr@rtfm.com
 
 
