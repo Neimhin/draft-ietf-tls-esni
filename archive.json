@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-04-11T01:05:11.842810+00:00",
+  "timestamp": "2024-04-14T01:35:51.999595+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56299,6 +56299,32 @@
           "comments": []
         }
       ]
+    },
+    {
+      "number": 614,
+      "id": "PR_kwDOB-yxNc5ske15",
+      "title": "Correct `ECHConfigList` length bounds",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/614",
+      "state": "OPEN",
+      "author": "ctz",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Draft 18.\r\n\r\n`ECHConfig` is:\r\n\r\n```\r\n       struct {\r\n           uint16 version;\r\n           uint16 length;\r\n           select (ECHConfig.version) {\r\n             case 0xfe0d: ECHConfigContents contents;\r\n           }\r\n       } ECHConfig;\r\n```\r\n\r\n4 bytes each minimum.\r\n\r\n`ECHConfigList` is:\r\n\r\n```\r\n       ECHConfig ECHConfigList<1..2^16-1>;\r\n```\r\n\r\nThat implies an `ECHConfig` could be encoded in one byte? I think this should be:\r\n\r\n```\r\n       ECHConfig ECHConfigList<4..2^16-4>;\r\n```",
+      "createdAt": "2024-04-13T15:25:04Z",
+      "updatedAt": "2024-04-13T15:25:05Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "c298098702d6fe9b9db50f2a76878b5aea6e357d",
+      "headRepository": "ctz/draft-ietf-tls-esni",
+      "headRefName": "ctz-patch-1",
+      "headRefOid": "d65cb08201cf7d8536f84f5a9164a6b96956a668",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
     }
   ]
 }
