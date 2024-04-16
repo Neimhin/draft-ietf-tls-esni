@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-04-14T01:35:51.999595+00:00",
+  "timestamp": "2024-04-16T01:04:18.372386+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -56312,18 +56312,33 @@
       "labels": [],
       "body": "Draft 18.\r\n\r\n`ECHConfig` is:\r\n\r\n```\r\n       struct {\r\n           uint16 version;\r\n           uint16 length;\r\n           select (ECHConfig.version) {\r\n             case 0xfe0d: ECHConfigContents contents;\r\n           }\r\n       } ECHConfig;\r\n```\r\n\r\n4 bytes each minimum.\r\n\r\n`ECHConfigList` is:\r\n\r\n```\r\n       ECHConfig ECHConfigList<1..2^16-1>;\r\n```\r\n\r\nThat implies an `ECHConfig` could be encoded in one byte? I think this should be:\r\n\r\n```\r\n       ECHConfig ECHConfigList<4..2^16-4>;\r\n```",
       "createdAt": "2024-04-13T15:25:04Z",
-      "updatedAt": "2024-04-13T15:25:05Z",
+      "updatedAt": "2024-04-15T08:29:32Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c298098702d6fe9b9db50f2a76878b5aea6e357d",
       "headRepository": "ctz/draft-ietf-tls-esni",
       "headRefName": "ctz-patch-1",
-      "headRefOid": "d65cb08201cf7d8536f84f5a9164a6b96956a668",
+      "headRefOid": "01c111ea3e3b764c6d131b2a6bf6e63b72633b81",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "davidben",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Where are you getting `2^16-4` from? That seems wrong. It seems like you are confusing minimum of 4 with multiple of 4.\r\n\r\nBeyond that, agreed that 4 is a valid value, but 1 is also just as valid, as is 2 or 3. It makes no difference whether you reject 1 bytes at this layer of parser, or immediately afterwards when you actually go to parse the ECHConfigs. The only thing we're actually saying with any of these values is \"there must be at least one ECHConfig\".\r\n\r\nTo be honest, I think the TLSWG's habit of trying to compute the theoretical minimum value here, instead of just 1, is a waste of energy. At best it is confusing, and at worse we get the value wrong on accident and say the wrong thing.\r\nhttps://mailarchive.ietf.org/arch/msg/tls/kA1C6C0Wluwp6ui1VDmrFbaEm1U/\r\nhttps://mailarchive.ietf.org/arch/msg/tls/Vlcshsrq1QmWDgIqJO3se8K25jA/\r\n\r\nSo while I'm not _opposed_ to this PR, since it is a habit we have in other specifications, the lack of opposition only comes from the pre-existing habit. On its own, I think the habit is a bad one and ultimately makes our documents less readable.",
+          "createdAt": "2024-04-15T03:06:38Z",
+          "updatedAt": "2024-04-15T03:18:40Z"
+        },
+        {
+          "author": "ctz",
+          "authorAssociation": "NONE",
+          "body": "> Where are you getting `2^16-4` from? That seems wrong. It seems like you are confusing minimum of 4 with multiple of 4.\r\n\r\nYou're right. Corrected.\r\n\r\n> Beyond that, agreed that 4 is a valid value, but 1 is also just as valid, as is 2 or 3. It makes no difference whether you reject 1 bytes at this layer of parser, or immediately afterwards when you actually go to parse the ECHConfigs. The only thing we're actually saying with any of these values is \"there must be at least one ECHConfig\".\r\n\r\nWell I agree. I'm not sure who the TLS presentation language is for, but it always seems to me to detract from the descriptive text and take oxygen from more useful artifacts like test vectors or a reference implementation -- but I realise the TLSWG doesn't have a culture of either of those.",
+          "createdAt": "2024-04-15T08:29:32Z",
+          "updatedAt": "2024-04-15T08:29:32Z"
+        }
+      ],
       "reviews": []
     }
   ]
