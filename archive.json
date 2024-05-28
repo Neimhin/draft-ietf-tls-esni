@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-05-26T01:13:43.003602+00:00",
+  "timestamp": "2024-05-28T01:08:52.920323+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -12845,15 +12845,15 @@
       "id": "I_kwDOB-yxNc6CKMgx",
       "title": "Mention that the server identity may be revealed by ServerHellp",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/issues/612",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "emanjon",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "https://mailarchive.ietf.org/arch/msg/tls/5oKWlf---OqjQf37giXVVzIbPHw/\r\n\r\n>    \"ECH is not in itself sufficient to protect the identity of the\r\n>    server.  The target domain may also be visible through other\r\n>    channels, such as plaintext client DNS queries or visible server IP\r\n>    addresses.  However, DoH [RFC8484] and DPRIVE [RFC7858] [RFC8094]\r\n>    provide mechanisms for clients to conceal DNS lookups from network\r\n>    inspection, and many TLS servers host multiple domains on the same IP\r\n>    address.  Private origins may also be deployed behind a common\r\n>    provider, such as a reverse proxy.  In such environments, the SNI\r\n>    remains the primary explicit signal used to determine the server's\r\n>    identity.\"\r\n \r\nThis text only discusses that the identity of the server may be revealed by\r\n\"other channels\". I strongly think the document needs to mention that the\r\nidentity of the server may also be reveled by the unencrypted information\r\nin the ServerHello. In particular a reused KeyShare is problematic.\r\n \r\nSuggested addition:\r\n \r\nThe identity of the server may also be reveled by the unencrypted information\r\nin the ServerHello. Most of the current information in ServerHello is not unique.\r\nThe exception is KeyShare, which if reused provides a unique identifier of the server.\r\n \r\nCheers,\r\nJohn Preu\u00df Mattsson",
       "createdAt": "2024-03-13T11:02:47Z",
-      "updatedAt": "2024-03-13T11:02:47Z",
-      "closedAt": null,
+      "updatedAt": "2024-05-27T18:30:35Z",
+      "closedAt": "2024-05-27T18:30:35Z",
       "comments": []
     }
   ],
@@ -55944,13 +55944,13 @@
       "labels": [],
       "body": "",
       "createdAt": "2024-02-25T21:56:55Z",
-      "updatedAt": "2024-03-04T02:29:16Z",
+      "updatedAt": "2024-05-27T18:43:52Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
-      "baseRefOid": "52048599a9af744a3c01bab68be7d6924fce74db",
+      "baseRefOid": "c5c7baab39f837b0fe4d240b09746d82ef5e097b",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "retry_memory",
-      "headRefOid": "ff23cac077173f15ec9821bc621698233afe5baf",
+      "headRefOid": "96701ce022c540813fce004f0c8803eabdca57e4",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -55990,6 +55990,20 @@
           "body": "\r\n\r\nOn 04/03/2024 02:18, Eric Rescorla wrote:\r\n> I'm going to ship the next version\r\n\r\nYes, shipping a version good enough for WGLC and then IETF LC\r\nis the right plan. There'll be plenty of chances for fixing\r\nwording at those stages.\r\n\r\nS.\r\n",
           "createdAt": "2024-03-04T02:29:14Z",
           "updatedAt": "2024-03-04T02:29:14Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Revisiting this....\r\n\r\n1. I think we should make the \"single retry\" change. I split that into #616. There's no reason that should happen.\r\n\r\n2. I'm less sure about the \"you can remember\" stuff, but on balance I think it's worth it. I've updated it to take @bemasc's comments and now I think it's correct. @martinthomson  @bemasc @dennisjackson @davidben ?\r\n",
+          "createdAt": "2024-05-27T15:04:00Z",
+          "updatedAt": "2024-05-27T15:04:00Z"
+        },
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@martinthomson  how's this",
+          "createdAt": "2024-05-27T18:43:50Z",
+          "updatedAt": "2024-05-27T18:43:50Z"
         }
       ],
       "reviews": [
@@ -56184,6 +56198,46 @@
               "updatedAt": "2024-03-01T17:38:44Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc58DhM9",
+          "commit": {
+            "abbreviatedOid": "ba12a23"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-05-27T17:21:04Z",
+          "updatedAt": "2024-05-27T17:21:04Z",
+          "comments": [
+            {
+              "originalPosition": 8,
+              "body": "I commented on the other PR, but maybe this can point at the new section as a way of explaining the \"SHOULD\".",
+              "createdAt": "2024-05-27T17:21:04Z",
+              "updatedAt": "2024-05-27T17:21:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc58Dh6V",
+          "commit": {
+            "abbreviatedOid": "ba12a23"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-05-27T17:24:38Z",
+          "updatedAt": "2024-05-27T17:24:38Z",
+          "comments": [
+            {
+              "originalPosition": 24,
+              "body": "This \"however\" was a little unclear to me at first.\r\n\r\nI think that what you are saying is that when you save a retry config that worked for a future connection, you need to treat a retry that results as though you did not have a retry.  The result is that you will use the retry config and try again.\r\n\r\nThis needs to be part of the text that explains that you shouldn't accept a retry config if you just used one.  Otherwise, it's a little confusing.",
+              "createdAt": "2024-05-27T17:24:38Z",
+              "updatedAt": "2024-05-27T17:24:38Z"
+            }
+          ]
         }
       ]
     },
@@ -56305,24 +56359,26 @@
       "id": "PR_kwDOB-yxNc5ske15",
       "title": "Correct `ECHConfigList` length bounds",
       "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/614",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "ctz",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Draft 18.\r\n\r\n`ECHConfig` is:\r\n\r\n```\r\n       struct {\r\n           uint16 version;\r\n           uint16 length;\r\n           select (ECHConfig.version) {\r\n             case 0xfe0d: ECHConfigContents contents;\r\n           }\r\n       } ECHConfig;\r\n```\r\n\r\n4 bytes each minimum.\r\n\r\n`ECHConfigList` is:\r\n\r\n```\r\n       ECHConfig ECHConfigList<1..2^16-1>;\r\n```\r\n\r\nThat implies an `ECHConfig` could be encoded in one byte? I think this should be:\r\n\r\n```\r\n       ECHConfig ECHConfigList<4..2^16-4>;\r\n```",
       "createdAt": "2024-04-13T15:25:04Z",
-      "updatedAt": "2024-04-15T08:29:32Z",
+      "updatedAt": "2024-05-27T14:44:18Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c298098702d6fe9b9db50f2a76878b5aea6e357d",
       "headRepository": "ctz/draft-ietf-tls-esni",
       "headRefName": "ctz-patch-1",
       "headRefOid": "01c111ea3e3b764c6d131b2a6bf6e63b72633b81",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2024-05-27T14:44:18Z",
+      "mergedAt": "2024-05-27T14:44:18Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "22199f66e8fcffd9b24238d8d8c5d33679474dee"
+      },
       "comments": [
         {
           "author": "davidben",
@@ -56333,13 +56389,118 @@
         },
         {
           "author": "ctz",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "> Where are you getting `2^16-4` from? That seems wrong. It seems like you are confusing minimum of 4 with multiple of 4.\r\n\r\nYou're right. Corrected.\r\n\r\n> Beyond that, agreed that 4 is a valid value, but 1 is also just as valid, as is 2 or 3. It makes no difference whether you reject 1 bytes at this layer of parser, or immediately afterwards when you actually go to parse the ECHConfigs. The only thing we're actually saying with any of these values is \"there must be at least one ECHConfig\".\r\n\r\nWell I agree. I'm not sure who the TLS presentation language is for, but it always seems to me to detract from the descriptive text and take oxygen from more useful artifacts like test vectors or a reference implementation -- but I realise the TLSWG doesn't have a culture of either of those.",
           "createdAt": "2024-04-15T08:29:32Z",
           "updatedAt": "2024-04-15T08:29:32Z"
         }
       ],
       "reviews": []
+    },
+    {
+      "number": 615,
+      "id": "PR_kwDOB-yxNc5wrHTJ",
+      "title": "Explain about reused keyshares. Fixes #612",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/615",
+      "state": "MERGED",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2024-05-27T14:51:22Z",
+      "updatedAt": "2024-05-27T18:30:34Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "22199f66e8fcffd9b24238d8d8c5d33679474dee",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "issue612_reused_key_share",
+      "headRefOid": "8980078932344b750beaa809c852d7fed571a487",
+      "closedAt": "2024-05-27T18:30:34Z",
+      "mergedAt": "2024-05-27T18:30:34Z",
+      "mergedBy": "ekr",
+      "mergeCommit": {
+        "oid": "c5c7baab39f837b0fe4d240b09746d82ef5e097b"
+      },
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@martinthomson ",
+          "createdAt": "2024-05-27T14:51:39Z",
+          "updatedAt": "2024-05-27T14:51:39Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc58DgJh",
+          "commit": {
+            "abbreviatedOid": "8980078"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "...despite strong recommendations not to reuse a KeyShare value...\r\n\r\nThis seems almost unnecessary, really.  But it's correct.",
+          "createdAt": "2024-05-27T17:16:13Z",
+          "updatedAt": "2024-05-27T17:16:13Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 616,
+      "id": "PR_kwDOB-yxNc5wrLcs",
+      "title": "Don't retry from retry",
+      "url": "https://github.com/tlswg/draft-ietf-tls-esni/pull/616",
+      "state": "OPEN",
+      "author": "ekr",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This was split off from PR#609. Hopefully this is uncontroversial.",
+      "createdAt": "2024-05-27T15:02:08Z",
+      "updatedAt": "2024-05-27T18:44:02Z",
+      "baseRepository": "tlswg/draft-ietf-tls-esni",
+      "baseRefName": "master",
+      "baseRefOid": "22199f66e8fcffd9b24238d8d8c5d33679474dee",
+      "headRepository": "ekr/draft-ietf-tls-esni",
+      "headRefName": "retry_once",
+      "headRefOid": "28786bd66ffaf1b1a96d18e343bb916168f035da",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "ekr",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I added some text.",
+          "createdAt": "2024-05-27T18:44:01Z",
+          "updatedAt": "2024-05-27T18:44:01Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOB-yxNc58DglQ",
+          "commit": {
+            "abbreviatedOid": "70bb82d"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-05-27T17:18:33Z",
+          "updatedAt": "2024-05-27T17:18:33Z",
+          "comments": [
+            {
+              "originalPosition": 8,
+              "body": "Do we have a little more color to add here?\r\n\r\nThis is mostly about the case where a retry config is supplied by one server instance, but other server instances don't work.  That is a server configuration error, unless the client decided to keep the retry config for too long, in which case it is a signal that the client shouldn't hold on to old state.\r\n\r\nAdding that sort of context might make the SHOULD a little more useful.",
+              "createdAt": "2024-05-27T17:18:33Z",
+              "updatedAt": "2024-05-27T17:18:33Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
