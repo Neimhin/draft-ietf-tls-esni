@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2024-05-28T01:08:52.920323+00:00",
+  "timestamp": "2024-05-30T01:09:33.881589+00:00",
   "repo": "tlswg/draft-ietf-tls-esni",
   "labels": [
     {
@@ -55944,13 +55944,13 @@
       "labels": [],
       "body": "",
       "createdAt": "2024-02-25T21:56:55Z",
-      "updatedAt": "2024-05-27T18:43:52Z",
+      "updatedAt": "2024-05-29T04:03:46Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "c5c7baab39f837b0fe4d240b09746d82ef5e097b",
       "headRepository": "ekr/draft-ietf-tls-esni",
       "headRefName": "retry_memory",
-      "headRefOid": "96701ce022c540813fce004f0c8803eabdca57e4",
+      "headRefOid": "ba7aadbb667bba9dee960e19eb732004e74ffb50",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -56238,6 +56238,59 @@
               "updatedAt": "2024-05-27T17:24:38Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc58FeY-",
+          "commit": {
+            "abbreviatedOid": "96701ce"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-05-28T05:56:20Z",
+          "updatedAt": "2024-05-28T05:56:24Z",
+          "comments": [
+            {
+              "originalPosition": 51,
+              "body": "```suggestion\r\ncomply with any freshness rules (e.g., DNS TTLs) imposed by the ECH configuration.\r\n```",
+              "createdAt": "2024-05-28T05:56:21Z",
+              "updatedAt": "2024-05-28T05:56:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc58Jcso",
+          "commit": {
+            "abbreviatedOid": "ba7aadb"
+          },
+          "author": "bemasc",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2024-05-28T13:48:49Z",
+          "updatedAt": "2024-05-28T13:48:49Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOB-yxNc58OqlP",
+          "commit": {
+            "abbreviatedOid": "ba7aadb"
+          },
+          "author": "elardus-erasmus",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-05-29T04:03:45Z",
+          "updatedAt": "2024-05-29T04:03:46Z",
+          "comments": [
+            {
+              "originalPosition": 25,
+              "body": "Wondering if this `MAY` should not be a stronger `SHOULD`. If not implemented by the client, it does mean that there is a doubling in the number of (expensive PKI involving) connections for ECH disabled retries. For example, in situations like TLS-terminating proxies (all TLS 1.3+ECH connections going through it), temporary disabling of ECH on a server, or indefinitely in case of a server config issue.",
+              "createdAt": "2024-05-29T04:03:45Z",
+              "updatedAt": "2024-05-29T04:22:06Z"
+            }
+          ]
         }
       ]
     },
@@ -56459,7 +56512,7 @@
       "labels": [],
       "body": "This was split off from PR#609. Hopefully this is uncontroversial.",
       "createdAt": "2024-05-27T15:02:08Z",
-      "updatedAt": "2024-05-27T18:44:02Z",
+      "updatedAt": "2024-05-29T03:34:19Z",
       "baseRepository": "tlswg/draft-ietf-tls-esni",
       "baseRefName": "master",
       "baseRefOid": "22199f66e8fcffd9b24238d8d8c5d33679474dee",
@@ -56497,6 +56550,26 @@
               "body": "Do we have a little more color to add here?\r\n\r\nThis is mostly about the case where a retry config is supplied by one server instance, but other server instances don't work.  That is a server configuration error, unless the client decided to keep the retry config for too long, in which case it is a signal that the client shouldn't hold on to old state.\r\n\r\nAdding that sort of context might make the SHOULD a little more useful.",
               "createdAt": "2024-05-27T17:18:33Z",
               "updatedAt": "2024-05-27T17:18:33Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOB-yxNc58OluC",
+          "commit": {
+            "abbreviatedOid": "28786bd"
+          },
+          "author": "elardus-sophos",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2024-05-29T03:34:18Z",
+          "updatedAt": "2024-05-29T03:34:19Z",
+          "comments": [
+            {
+              "originalPosition": 13,
+              "body": "The previous paragraph also talks about a \"retry\". But that is an ECH *disabled* retry.\r\nIn this paragraph, based on the context, it is referring to an ECH *enabled* retry.\r\nShould the client be allowed to perform an ECH disabled retry here? And should anything about that, allowed or not allowed, be noted in this paragraph also?",
+              "createdAt": "2024-05-29T03:34:19Z",
+              "updatedAt": "2024-05-29T03:34:19Z"
             }
           ]
         }
